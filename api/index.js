@@ -44,7 +44,7 @@ var server = http.createServer(function(req, res) {
       
   
       console.log(`>>>>> Request received on /${trimmedPath} using method ${method} and qs ${JSON.stringify(qs)} and headers ${JSON.stringify(headers)} and payload ${buffer}`);
-      console.log(`<<<<< Sending back ${payloadString}`);
+      console.log(`<<<<< Sending back code ${statusCode} and payload ${payloadString}`);
 
     });
 
