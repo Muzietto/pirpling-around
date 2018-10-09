@@ -23,9 +23,31 @@ var server = http.createServer(function(req, res) {
     
     buffer += decoder.end()
     
-    res.end('Hello, World!\n');
+    var chosenHandler = router[trimmedPath] || handlers.notFound;
+
+    var data = {
+      trimmedPath,
+      method,
+      headers,
+      payload: buffer,
+    };
+
+    chosenHandler(data, (statusCode, payload) => {
+      
+      statusCode = (typeof statusCode === 'number') ? statusCode : 200;
+      payload = (typeof payload === 'object') ? payload : {};
+
+      var payloadString = JSON.stringify(payload);
+
+      res.writeHead(statusCode);
+      res.end(payloadString);
+      
   
-    console.log(`>>>>> Request received on /${trimmedPath} using method ${method} and qs ${JSON.stringify(qs)} and headers ${JSON.stringify(headers)} and payload ${buffer}`);
+      console.log(`>>>>> Request received on /${trimmedPath} using method ${method} and qs ${JSON.stringify(qs)} and headers ${JSON.stringify(headers)} and payload ${buffer}`);
+      console.log(`<<<<< Sending back ${payloadString}`);
+
+    });
+
     
   });
 
@@ -34,3 +56,19 @@ var server = http.createServer(function(req, res) {
 server.listen(3000, function() {
   console.log('Server listening on 3000');
 });
+
+var handlers = {};
+
+handlers.sample = (data, cb) => {
+  cb(406, {name: 'sample handler'});
+};
+
+handlers.notFound = (data, cb) => {
+  cb(404);
+};
+
+
+var router = {
+  'sample': handlers.sample,
+};
+
