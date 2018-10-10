@@ -2,6 +2,7 @@
 var http = require('http');
 var url = require('url');
 var StringDecoder = require('string_decoder').StringDecoder;
+var config = require('./config');
 
 var server = http.createServer(function(req, res) {
 
@@ -44,8 +45,8 @@ var server = http.createServer(function(req, res) {
       res.end(payloadString);
       
   
-      console.log(`>>>>> Request received on /${trimmedPath} using method ${method} and qs ${JSON.stringify(qs)} and headers ${JSON.stringify(headers)} and payload ${buffer}`);
-      console.log(`<<<<< Sending back code ${statusCode} and payload ${payloadString}`);
+      console.log(`\n>>>>> Request received on /${trimmedPath} using method ${method} and qs ${JSON.stringify(qs)} and headers ${JSON.stringify(headers)} and payload ${buffer}`);
+      console.log(`<<<<< Sending back code ${statusCode} and payload ${payloadString}\n`);
 
     });
 
@@ -54,8 +55,8 @@ var server = http.createServer(function(req, res) {
 
 });
 
-server.listen(3000, function() {
-  console.log('Server listening on 3000');
+server.listen(config.port, function() {
+  console.log(`${config.envName} - Server listening on ${config.port}`);
 });
 
 var handlers = {};
