@@ -44,10 +44,13 @@ var unifiedServer = protocol => (req, res) => {
 
   var decoder = new StringDecoder('utf-8');
   var buffer = '';
+
   req.on('data', data => { buffer += decoder.write(data)});
   req.on('end', data => {
 
     buffer += decoder.end()
+
+    console.log(`>>>>> ${protocol} ${method} received on /${trimmedPath} with qs ${JSON.stringify(qs)} and headers ${JSON.stringify(headers)} and payload ${buffer}`);
 
     var chosenHandler = router[trimmedPath] || handlers.notFound;
 
@@ -55,6 +58,7 @@ var unifiedServer = protocol => (req, res) => {
       trimmedPath,
       method,
       headers,
+      queryStringObject: qs,
       payload: helpers.parseJsonToObject(buffer),
     };
 
@@ -69,10 +73,7 @@ var unifiedServer = protocol => (req, res) => {
       res.writeHead(statusCode);
       res.end(payloadString);
 
-
-      console.log(`>>>>> ${protocol} Request received on /${trimmedPath} using method ${method} and qs ${JSON.stringify(qs)} and headers ${JSON.stringify(headers)} and payload ${buffer}`);
-      console.log(`<<<<< ${protocol} on /${trimmedPath}: sending back code ${statusCode} and payload ${payloadString}\n`);
-
+      console.log(`<<<<< ${protocol} ${method} on /${trimmedPath}: sending back code ${statusCode} and payload ${payloadString}\n`);
     });
 
   });

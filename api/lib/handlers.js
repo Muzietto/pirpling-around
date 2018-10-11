@@ -80,16 +80,120 @@ _usersHandlers.post = (data, callback) => {
   }
 };
 
+// TODO - only authenticated users access their stuff
 _usersHandlers.get = (data, callback) => {
 
+  console.log(`QS is ${JSON.stringify(data.queryStringObject)}`);
+
+  var phone = typeof data.queryStringObject !== 'undefined'
+    && typeof data.queryStringObject.phone === 'string'
+    && data.queryStringObject.phone.trim().length > 0
+    && data.queryStringObject.phone.trim();
+
+  console.log(`user phone is ${phone}`);
+
+  if (phone) {
+
+    _data.read('users', phone, (err, data) => {
+      if (!err && data) {
+
+        console.log(`retrieved data: ${JSON.stringify(data)}`);
+
+        delete data.hashedPassword;
+        callback(200, data);
+
+      } else {
+        callback(404);
+      }
+    });
+
+  } else {
+    callback(400, {error: 'missing required field: phone number'});
+  }
 };
 
+// TODO - only authenticated users access their stuff
 _usersHandlers.put = (data, callback) => {
 
+  var phone = typeof data.payload !== 'undefined'
+    && typeof data.payload.phone === 'string'
+    && data.payload.phone.trim().length > 0
+    && data.payload.phone.trim();
+  var firstName = _validatedS(data.payload.firstName);
+  var lastName = _validatedS(data.payload.lastName);
+  var password = _validatedS(data.payload.password);
+
+  if (phone) {
+
+    if (firstName || lastName || password) {
+
+      _data.read('users', phone, (err, data) =>{
+        if (!err && data) {
+
+          if (firstName) {
+            data.firstName = firstName;
+          }
+          if (lastName) {
+            data.lastName = lastName;
+          }
+          if (password) {
+            data.hashedPassword = helpers.hash(password);
+          }
+
+          _data.update('users', phone, data, err => {
+            if (!err) {
+              callback(200);
+            } else {
+              var msg = `could not update user ${phone}: ${err}`;
+              console.log(msg);
+              callback(500, {error: msg});
+            }
+          });
+        } else {
+          callback(404);
+        }
+      });
+
+    } else {
+      callback(400, {error: 'no fields to update'});
+    }
+
+  } else {
+    callback(400, {error: 'missing required field'});
+  }
 };
 
+// TODO only authenticate users delete themselves
+// TODO rem to delete all stuff related to this user
 _usersHandlers.delete = (data, callback) => {
+  var phone = typeof data.payload !== 'undefined'
+    && typeof data.payload.phone === 'string'
+    && data.payload.phone.trim().length > 0
+    && data.payload.phone.trim();
 
+  console.log(`user phone is ${phone}`);
+
+  if (phone) {
+
+    _data.read('users', phone, (err, data) => {
+      if (!err && data) {
+        _data.delete('users', phone, (err, data) => {
+          if (!err) {
+            callback(200);
+          } else {
+            var msg = `could not delete user ${phone}: ${err}`;
+            console.log(msg);
+            callback(500, {error: msg});
+          }
+        });
+      } else {
+        callback(400, {error: `could not find user ${phone}`});
+      }
+    });
+
+  } else {
+    callback(400, {error: 'missing required field: phone number'});
+  }
 };
 
 module.exports = handlers;
