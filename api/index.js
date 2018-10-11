@@ -79,6 +79,10 @@ var unifiedServer = protocol => (req, res) => {
 
 var handlers = {};
 
+handlers.ping = (data, cb) => {
+  cb(200);
+};
+
 handlers.sample = (data, cb) => {
   cb(406, {name: 'sample handler'});
 };
@@ -89,6 +93,7 @@ handlers.notFound = (data, cb) => {
 
 
 var router = {
+  'ping': handlers.ping,
   'sample': handlers.sample,
 };
 
