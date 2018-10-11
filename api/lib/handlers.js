@@ -43,6 +43,7 @@ handlers.tokens = (data, callback) => {
 
 // required firstName, lastName, phone, password, tosAgreement
 _usersHandlers.post = (data, callback) => {
+
   var firstName = _validatedS(data.payload.firstName);
   var lastName = _validatedS(data.payload.lastName);
   var phone = _validatedS(data.payload.phone);
@@ -107,10 +108,9 @@ _usersHandlers.get = (data, callback) => {
   if (phone) {
 
     var token  = typeof data.headers.token === 'string' && data.headers.token;
-    console.log(`user token is ${token}`);
-    var _token = helpers.parseJsonToObject(token);
+    console.log(`user token id is ${token}`);
 
-    _tokensHandlers.verifyToken(_token.id, _token.phone, isValid => {
+    _tokensHandlers.verifyToken(token, phone, isValid => {
 
       if (isValid) {
         console.log('token is valid');
@@ -148,11 +148,11 @@ _usersHandlers.put = (data, callback) => {
   var password = _validatedS(data.payload.password);
 
   if (phone) {
+
     var token  = typeof data.headers.token === 'string' && data.headers.token;
     console.log(`user token is ${token}`);
-    var _token = helpers.parseJsonToObject(token);
 
-    _tokensHandlers.verifyToken(_token.id, _token.phone, isValid => {
+    _tokensHandlers.verifyToken(token, phone, isValid => {
 
       if (isValid) {
         console.log('token is valid');
@@ -201,6 +201,7 @@ _usersHandlers.put = (data, callback) => {
 
 // TODO rem to delete all stuff related to this user
 _usersHandlers.delete = (data, callback) => {
+
   var phone = typeof data.payload !== 'undefined'
     && typeof data.payload.phone === 'string'
     && data.payload.phone.trim().length > 0
@@ -211,9 +212,8 @@ _usersHandlers.delete = (data, callback) => {
   if (phone) {
     var token  = typeof data.headers.token === 'string' && data.headers.token;
     console.log(`user token is ${token}`);
-    var _token = helpers.parseJsonToObject(token);
 
-    _tokensHandlers.verifyToken(_token.id, _token.phone, isValid => {
+    _tokensHandlers.verifyToken(token, phone, isValid => {
 
       if (isValid) {
         console.log('token is valid');
@@ -316,11 +316,13 @@ _tokensHandlers.put = (data, callback) => {
   if (id && extend) {
 
     _data.read('tokens', id, (err, tokenData) => {
+
       if (!err && tokenData) {
 
         if (tokenData.expires > Date.now()) {
 
            tokenData.expires = Date.now() + 1000 * 60 * 60;
+
            _data.update('tokens', id, tokenData, err => {
              if (!err) {
 
@@ -374,10 +376,12 @@ _tokensHandlers.delete = (data, callback) => {
 
 // verify token id
 _tokensHandlers.verifyToken = (id, phone, callback) => {
+
   _data.read('tokens', id, (err, tokenData) => {
+
     if (!err && tokenData) {
 
-      if (tokenData.phone === phone && tokenData.expires) {
+      if (tokenData.phone === phone && tokenData.expires > Date.now()) {
         callback(true);
       } else {
         callback(false);

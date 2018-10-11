@@ -1,0 +1,20 @@
+create user
+-----------
+jsoncurl --request POST -d '{"firstName":"Patrizia","lastName":"Hoffer","phone":"39393809042743","password":"123xyz","tosAgreement":true}' http://localhost:3000/users
+
+update user
+-----------
+jsoncurl --header "token: 9p21t10i54fzqmtt1j8" --request PUT -d '{"firstName":"Patty","lastName":"Hoffer","phone":"39393809042743"}' http://localhost:3000/users
+
+create token
+------------
+jsoncurl --request POST -d '{"phone":"393473553073","password":"xyz123"}' http://localhost:3000/tokens
+
+get token
+---------
+jsoncurl http://localhost:3000/tokens?id=9p21t10i54fzqmtt1j8
+
+extend token
+------------
+jsoncurl --header "token: 9p21t10i54fzqmtt1j8" --request PUT -d '{"id":"9p21t10i54fzqmtt1j8""extend":true}' http://localhost:3000/tokens
+
