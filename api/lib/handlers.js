@@ -3,6 +3,7 @@ var _data = require('./data');
 var helpers = require('./helpers');
 var handlers = {};
 var _usersHandlers = {};
+var _tokensHandlers = {};
 
 handlers.ping = (data, cb) => {
   cb(200);
@@ -22,6 +23,18 @@ handlers.users = (data, callback) => {
   if (acceptableMethods.indexOf(data.method) > -1) {
 
     _usersHandlers[data.method](data, callback);
+
+  } else {
+    callback(405); // Method Not Allowed
+  }
+};
+
+handlers.tokens = (data, callback) => {
+  var acceptableMethods = ['post', 'get', 'put', 'delete'];
+
+  if (acceptableMethods.indexOf(data.method) > -1) {
+
+    _tokensHandlers[data.method](data, callback);
 
   } else {
     callback(405); // Method Not Allowed
@@ -196,6 +209,62 @@ _usersHandlers.delete = (data, callback) => {
   }
 };
 
+//requires phone and password
+_tokensHandlers.post = (data, callback) => {
+  var phone = _validatedS(data.payload.phone);
+  var password = _validatedS(data.payload.password);
+
+  if (phone && password) {
+    _data.read('users', phone, (err, data) => {
+      if (!err && data) {
+        console.log(`found data for user ${phone}`);
+
+        var hashedPassword = helpers.hash(password);
+
+        if (hashedPassword === data.hashedPassword) {
+          console.log('creating token for the next hour');
+
+          var tokenId = helpers.createRandomString(20);
+          var expires = Date.now() + 1000 * 60 *60;
+
+          var tokenObject = {
+            phone,
+            id: tokenId,
+            expires,
+          };
+
+          _data.create('tokens', tokenId, tokenObject, err => {
+            if (!err) {
+              callback(200, tokenObject);
+            } else {
+              callback(500, {error: `could not create the new token: ${err}`});
+            }
+          });
+
+        } else {
+          callback(400, {error: 'wrong password provided'});
+        }
+
+      } else {
+        callback(400, {error: `could not find user ${phone}`});
+      }
+    });
+  } else {
+    callback(400, {error: 'missing required field(s)'});
+  }
+};
+
+_tokensHandlers.get = (data, callback) => {
+
+};
+
+_tokensHandlers.put = (data, callback) => {
+
+};
+
+_tokensHandlers.delete = (data, callback) => {
+
+};
 module.exports = handlers;
 
 function _validatedS(value) {

@@ -29,4 +29,22 @@ helpers.parseJsonToObject = str => {
   return result;
 };
 
+helpers.createRandomString = size => {
+  size = (typeof size == 'number' && size > 0) ? size : false;
+
+  if (size) {
+    var possibleCharacters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+
+    var str = '';
+
+    for (i=1; i<size; i++) {
+      str += possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters.length));
+    }
+    console.log(`random string is ${str}`);
+    return str;
+  } else {
+    return false;
+  }
+};
+
 module.exports = helpers;
