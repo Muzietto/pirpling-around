@@ -5,6 +5,8 @@ var url = require('url');
 var StringDecoder = require('string_decoder').StringDecoder;
 var config = require('./config');
 var fs = require('fs');
+var handlers = require('./lib/handlers');
+var helpers = require('./lib/helpers');
 
 var httpServer = http.createServer(function(req, res) {
   unifiedServer('HTTP')(req, res);
@@ -43,21 +45,21 @@ var unifiedServer = protocol => (req, res) => {
   var decoder = new StringDecoder('utf-8');
   var buffer = '';
   req.on('data', data => { buffer += decoder.write(data)});
-  req.on('end', data => { 
-    
+  req.on('end', data => {
+
     buffer += decoder.end()
-    
+
     var chosenHandler = router[trimmedPath] || handlers.notFound;
 
     var data = {
       trimmedPath,
       method,
       headers,
-      payload: buffer,
+      payload: helpers.parseJsonToObject(buffer),
     };
 
     chosenHandler(data, (statusCode, payload) => {
-      
+
       statusCode = (typeof statusCode === 'number') ? statusCode : 200;
       payload = (typeof payload === 'object') ? payload : {};
 
@@ -66,34 +68,18 @@ var unifiedServer = protocol => (req, res) => {
       res.setHeader('Content-Type', 'application/json');
       res.writeHead(statusCode);
       res.end(payloadString);
-      
-  
+
+
       console.log(`>>>>> ${protocol} Request received on /${trimmedPath} using method ${method} and qs ${JSON.stringify(qs)} and headers ${JSON.stringify(headers)} and payload ${buffer}`);
       console.log(`<<<<< ${protocol} on /${trimmedPath}: sending back code ${statusCode} and payload ${payloadString}\n`);
 
     });
-    
+
   });
 }
 
-
-var handlers = {};
-
-handlers.ping = (data, cb) => {
-  cb(200);
-};
-
-handlers.sample = (data, cb) => {
-  cb(406, {name: 'sample handler'});
-};
-
-handlers.notFound = (data, cb) => {
-  cb(404);
-};
-
-
 var router = {
-  'ping': handlers.ping,
-  'sample': handlers.sample,
+  ping: handlers.ping,
+  sample: handlers.sample,
+  users: handlers.users,
 };
-
