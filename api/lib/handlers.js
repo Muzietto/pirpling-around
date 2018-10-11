@@ -93,7 +93,6 @@ _usersHandlers.post = (data, callback) => {
   }
 };
 
-// TODO - only authenticated users access their stuff
 _usersHandlers.get = (data, callback) => {
 
   console.log(`QS is ${JSON.stringify(data.queryStringObject)}`);
@@ -107,19 +106,31 @@ _usersHandlers.get = (data, callback) => {
 
   if (phone) {
 
-    _data.read('users', phone, (err, data) => {
-      if (!err && data) {
+    var token  = typeof data.headers.token === 'string' && data.headers.token;
+    console.log(`user token is ${token}`);
+    var _token = helpers.parseJsonToObject(token);
 
-        console.log(`retrieved data: ${JSON.stringify(data)}`);
+    _tokensHandlers.verifyToken(_token.id, _token.phone, isValid => {
 
-        delete data.hashedPassword;
-        callback(200, data);
+      if (isValid) {
+
+        _data.read('users', phone, (err, data) => {
+          if (!err && data) {
+
+            console.log(`retrieved data: ${JSON.stringify(data)}`);
+
+            delete data.hashedPassword;
+            callback(200, data);
+
+          } else {
+            callback(404);
+          }
+        });
 
       } else {
-        callback(404);
+        callback(403, {error: 'missing token in header or invalid token'});
       }
     });
-
   } else {
     callback(400, {error: 'missing required field: phone number'});
   }
@@ -336,6 +347,24 @@ _tokensHandlers.delete = (data, callback) => {
   }
 
 };
+
+// verify token id
+_tokensHandlers.verifyToken = (id, phone, callback) => {
+  _data.read('tokens', id, (err, tokenData) => {
+    if (!err && tokenData) {
+
+      if (tokenData.phone === phone && tokenData.expires) {
+        callback(true);
+      } else {
+        callback(false);
+      }
+
+    } else {
+      callback(false);
+    }
+  });
+}
+
 module.exports = handlers;
 
 function _validatedS(value) {
