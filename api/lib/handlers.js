@@ -113,6 +113,7 @@ _usersHandlers.get = (data, callback) => {
     _tokensHandlers.verifyToken(_token.id, _token.phone, isValid => {
 
       if (isValid) {
+        console.log('token is valid');
 
         _data.read('users', phone, (err, data) => {
           if (!err && data) {
@@ -136,7 +137,6 @@ _usersHandlers.get = (data, callback) => {
   }
 };
 
-// TODO - only authenticated users access their stuff
 _usersHandlers.put = (data, callback) => {
 
   var phone = typeof data.payload !== 'undefined'
@@ -148,46 +148,57 @@ _usersHandlers.put = (data, callback) => {
   var password = _validatedS(data.payload.password);
 
   if (phone) {
+    var token  = typeof data.headers.token === 'string' && data.headers.token;
+    console.log(`user token is ${token}`);
+    var _token = helpers.parseJsonToObject(token);
 
-    if (firstName || lastName || password) {
+    _tokensHandlers.verifyToken(_token.id, _token.phone, isValid => {
 
-      _data.read('users', phone, (err, data) =>{
-        if (!err && data) {
+      if (isValid) {
+        console.log('token is valid');
+        if (firstName || lastName || password) {
 
-          if (firstName) {
-            data.firstName = firstName;
-          }
-          if (lastName) {
-            data.lastName = lastName;
-          }
-          if (password) {
-            data.hashedPassword = helpers.hash(password);
-          }
+          _data.read('users', phone, (err, data) =>{
+            if (!err && data) {
 
-          _data.update('users', phone, data, err => {
-            if (!err) {
-              callback(200);
+              if (firstName) {
+                data.firstName = firstName;
+              }
+              if (lastName) {
+                data.lastName = lastName;
+              }
+              if (password) {
+                data.hashedPassword = helpers.hash(password);
+              }
+
+              _data.update('users', phone, data, err => {
+                if (!err) {
+                  callback(200);
+                } else {
+                  var msg = `could not update user ${phone}: ${err}`;
+                  console.log(msg);
+                  callback(500, {error: msg});
+                }
+              });
             } else {
-              var msg = `could not update user ${phone}: ${err}`;
-              console.log(msg);
-              callback(500, {error: msg});
+              callback(404);
             }
           });
-        } else {
-          callback(404);
-        }
-      });
 
-    } else {
-      callback(400, {error: 'no fields to update'});
-    }
+        } else {
+          callback(400, {error: 'no fields to update'});
+        }
+
+      } else {
+        callback(403, {error: 'missing token in header or invalid token'});
+      }
+    });
 
   } else {
     callback(400, {error: 'missing required field'});
   }
 };
 
-// TODO only authenticate users delete themselves
 // TODO rem to delete all stuff related to this user
 _usersHandlers.delete = (data, callback) => {
   var phone = typeof data.payload !== 'undefined'
@@ -198,20 +209,33 @@ _usersHandlers.delete = (data, callback) => {
   console.log(`user phone is ${phone}`);
 
   if (phone) {
+    var token  = typeof data.headers.token === 'string' && data.headers.token;
+    console.log(`user token is ${token}`);
+    var _token = helpers.parseJsonToObject(token);
 
-    _data.read('users', phone, (err, data) => {
-      if (!err && data) {
-        _data.delete('users', phone, err => {
-          if (!err) {
-            callback(200);
+    _tokensHandlers.verifyToken(_token.id, _token.phone, isValid => {
+
+      if (isValid) {
+        console.log('token is valid');
+
+        _data.read('users', phone, (err, data) => {
+          if (!err && data) {
+            _data.delete('users', phone, err => {
+              if (!err) {
+                callback(200);
+              } else {
+                var msg = `could not delete user ${phone}: ${err}`;
+                console.log(msg);
+                callback(500, {error: msg});
+              }
+            });
           } else {
-            var msg = `could not delete user ${phone}: ${err}`;
-            console.log(msg);
-            callback(500, {error: msg});
+            callback(400, {error: `could not find user ${phone}`});
           }
         });
+
       } else {
-        callback(400, {error: `could not find user ${phone}`});
+        callback(403, {error: 'missing token in header or invalid token'});
       }
     });
 
