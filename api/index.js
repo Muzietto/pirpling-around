@@ -1,10 +1,33 @@
 
 var http = require('http');
+var https = require('https');
 var url = require('url');
 var StringDecoder = require('string_decoder').StringDecoder;
 var config = require('./config');
+var fs = require('fs');
 
-var server = http.createServer(function(req, res) {
+var httpServer = http.createServer(function(req, res) {
+  unifiedServer('HTTP')(req, res);
+});
+
+httpServer.listen(config.httpPort, function() {
+  console.log(`${config.envName} - HTTP server listening on ${config.httpPort}`);
+});
+
+var httpsServerOptions = {
+  key: fs.readFileSync('./https/key.pem'),
+  cert: fs.readFileSync('./https/cert.pem'),
+};
+
+var httpsServer = https.createServer(httpsServerOptions, function(req, res) {
+  unifiedServer('HTTPS')(req, res);
+});
+
+httpsServer.listen(config.httpsPort, function() {
+  console.log(`${config.envName} - HTTPS server listening on ${config.httpsPort}`);
+});
+
+var unifiedServer = protocol => (req, res) => {
 
   var parsedUrl = url.parse(req.url, true);
 
@@ -45,19 +68,14 @@ var server = http.createServer(function(req, res) {
       res.end(payloadString);
       
   
-      console.log(`\n>>>>> Request received on /${trimmedPath} using method ${method} and qs ${JSON.stringify(qs)} and headers ${JSON.stringify(headers)} and payload ${buffer}`);
-      console.log(`<<<<< Sending back code ${statusCode} and payload ${payloadString}\n`);
+      console.log(`>>>>> ${protocol} Request received on /${trimmedPath} using method ${method} and qs ${JSON.stringify(qs)} and headers ${JSON.stringify(headers)} and payload ${buffer}`);
+      console.log(`<<<<< ${protocol} on /${trimmedPath}: sending back code ${statusCode} and payload ${payloadString}\n`);
 
     });
-
     
   });
+}
 
-});
-
-server.listen(config.port, function() {
-  console.log(`${config.envName} - Server listening on ${config.port}`);
-});
 
 var handlers = {};
 
