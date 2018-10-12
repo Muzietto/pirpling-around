@@ -47,4 +47,14 @@ helpers.createRandomString = size => {
   }
 };
 
+helpers.validatedS = value => {
+  return (typeof(value) === 'string' && value.trim().length > 0)
+    ? value.trim()
+    : false;
+}
+
+helpers.validatedB = value => {
+  return (typeof(value) === 'boolean' && value);
+}
+
 module.exports = helpers;
