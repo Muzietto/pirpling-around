@@ -1,7 +1,7 @@
 // request handlers
 var _data = require('../data');
 var helpers = require('../helpers');
-var _usersHandlers = require('./users');
+var _usersHandlers = require('./users0');
 var _tokensHandlers = require('./tokens');
 
 var handlers = {};
@@ -23,7 +23,9 @@ handlers.users = (data, callback) => {
 
   if (acceptableMethods.indexOf(data.method) > -1) {
 
-    _usersHandlers[data.method](data, callback);
+     _usersHandlers[data.method](data)
+       .then(res => callback(res.code, res.payload))
+       .catch(res => callback(res.code, res.payload));
 
   } else {
     callback(405); // Method Not Allowed
