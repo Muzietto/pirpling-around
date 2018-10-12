@@ -8,7 +8,7 @@ jsoncurl --header "token: 9p21t10i54fzqmtt1j8" --request PUT -d '{"firstName":"P
 
 create token
 ------------
-jsoncurl --request POST -d '{"phone":"393473553073","password":"xyz123"}' http://localhost:3000/tokens
+jsoncurl --request POST -d '{"phone":"39393809042743","password":"123xyz"}' http://localhost:3000/tokens
 
 get token
 ---------
