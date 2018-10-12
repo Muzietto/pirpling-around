@@ -1,7 +1,7 @@
 // request handlers
 var _data = require('../data');
 var helpers = require('../helpers');
-var _usersHandlers = require('./users0');
+var _usersHandlers = require('./users0'); // promise-based
 var _tokensHandlers = require('./tokens');
 
 var handlers = {};
