@@ -1,6 +1,7 @@
 // returns promises
 
 var _data = require('../data');
+var _dataPromise = require('../data0');
 var helpers = require('../helpers');
 
 var handlers = {};
@@ -8,7 +9,6 @@ var handlers = {};
 // required firstName, lastName, phone, password, tosAgreement
 handlers.post = data => {
 
-  return new Promise((resolve, reject) => {
     var firstName = helpers.validatedS(data.payload.firstName);
     var lastName = helpers.validatedS(data.payload.lastName);
     var phone = helpers.validatedS(data.payload.phone);
@@ -17,11 +17,9 @@ handlers.post = data => {
 
     if (firstName &&  lastName && phone && password && tosAgreement) {
 
-      // user must be non-existing
-      _data.read('users', phone, (err, userData) => {
-
-        if (err) { // couldn't read .data/users/<phone>.json
-
+      return _dataPromise.read('users', phone)
+        .then(() => Promise.reject({code: 400, payload: {error: 'A user with that phone number already exists'}});)
+        .catch(err => { // user must be non-existing
           // hash the password
           var hashedPassword = helpers.hash(password);
 
@@ -34,30 +32,24 @@ handlers.post = data => {
               hashedPassword,
             };
 
-            _data.create('users', phone, userObject, err => {
-
-              if (!err) {
+            return _dataPromise.create('users', phone)
+              .then(() => {
                 console.log(`Created new user: ${phone}`);
-                resolve({code: 200});
-              } else {
+                return Promise.resolve({code: 200});
+              })
+              .catch(err => {
                 var msg = `Could not create new user: ${err}`;
                 console.log(msg);
-                reject({code: 500, payload: {error: msg}});
-              }
-            });
+                return Promise.reject({code: 500, payload: {error: msg}});
+              });
+            }
           } else {
-            reject({code: 400, payload: {error: 'Problems hashing the password'}});
-          }
-
-        } else {
-          reject({code: 400, payload: {error: 'A user with that phone number already exists'}});
-        }
-      });
-
+            return Promise.reject({code: 400, payload: {error: 'Problems hashing the password'}});
+          });
+        });
     } else {
-      reject({code: 400, payload: {error: 'Missing required fields'}});
+      return Promise.reject({code: 400, payload: {error: 'Missing required fields'}});
     }
-  });
 };
 
 handlers.get = data => {
