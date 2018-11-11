@@ -1,3 +1,11 @@
+aliases
+-------
+alias jsoncurl='curl -H "Content-Type: application/json"'
+alias textcurl='curl -H "Content-Type: text/plain"'
+alias htmlcurl='curl -H "Content-Type: text/html"'
+
+--------------------------------------------------------------------------------------------------------
+
 create user
 -----------
 jsoncurl --request POST -d '{"firstName":"Patrizia","lastName":"Hoffer","phone":"39393809042743","password":"123xyz","tosAgreement":true}' http://localhost:3000/users
@@ -17,4 +25,3 @@ jsoncurl http://localhost:3000/tokens?id=9p21t10i54fzqmtt1j8
 extend token
 ------------
 jsoncurl --header "token: 9p21t10i54fzqmtt1j8" --request PUT -d '{"id":"9p21t10i54fzqmtt1j8""extend":true}' http://localhost:3000/tokens
-
