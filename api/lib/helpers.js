@@ -57,6 +57,4 @@ helpers.validatedB = value => {
   return (typeof(value) === 'boolean' && value);
 }
 
-helpers.gimmeOne = _ => 1;
-
 module.exports = helpers;
