@@ -1,9 +1,11 @@
-// uses promise-based data
- 
+// uses promise-based data, but still invokes callbacks at the end
+
 var _data = require('../data0');
 var helpers = require('../helpers');
 
-var handlers = {};
+var handlers = {
+  interfaceType: () => 'callback',
+};
 
 //requires phone and password
 handlers.post = (data, callback) => {

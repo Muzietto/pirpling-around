@@ -1,10 +1,12 @@
-// returns promises
+// uses promise-based datasources and returns promises
 
 var _data = require('../data');
 var _dataPromise = require('../data0');
 var helpers = require('../helpers');
 
-var handlers = {};
+var handlers = {
+  interfaceType: () => 'promise',
+};
 
 // required firstName, lastName, phone, password, tosAgreement
 handlers.post = data => {
@@ -18,7 +20,7 @@ handlers.post = data => {
     if (firstName &&  lastName && phone && password && tosAgreement) {
 
       return _dataPromise.read('users', phone)
-        .then(() => Promise.reject({code: 400, payload: {error: 'A user with that phone number already exists'}});)
+        .then(() => Promise.reject({code: 400, payload: {error: 'A user with that phone number already exists'}}))
         .catch(err => { // user must be non-existing
           // hash the password
           var hashedPassword = helpers.hash(password);
@@ -42,10 +44,9 @@ handlers.post = data => {
                 console.log(msg);
                 return Promise.reject({code: 500, payload: {error: msg}});
               });
-            }
           } else {
             return Promise.reject({code: 400, payload: {error: 'Problems hashing the password'}});
-          });
+          }
         });
     } else {
       return Promise.reject({code: 400, payload: {error: 'Missing required fields'}});

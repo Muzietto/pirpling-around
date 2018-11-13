@@ -1,7 +1,9 @@
 var _data = require('../data');
 var helpers = require('../helpers');
 
-var handlers = {};
+var handlers = {
+  interfaceType: () => 'callback',
+};
 
 // required firstName, lastName, phone, password, tosAgreement
 handlers.post = (data, callback) => {
