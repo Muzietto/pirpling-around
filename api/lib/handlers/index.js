@@ -18,6 +18,7 @@ handlers.notFound = (data, cb) => {
   cb(404);
 };
 
+// TODO make all this promise-based
 handlers.users = (data, callback) => {
   var acceptableMethods = ['post', 'get', 'put', 'delete'];
 
@@ -32,6 +33,8 @@ handlers.users = (data, callback) => {
   }
 };
 
+handlers.users.interfaceType = _usersHandlers.interfaceType;
+
 handlers.tokens = (data, callback) => {
   var acceptableMethods = ['post', 'get', 'put', 'delete'];
 
@@ -43,5 +46,7 @@ handlers.tokens = (data, callback) => {
     callback(405); // Method Not Allowed
   }
 };
+
+handlers.tokens.interfaceType = _tokensHandlers.interfaceType;
 
 module.exports = handlers;
