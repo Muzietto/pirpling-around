@@ -1,6 +1,6 @@
 // promise-based
 
-var fs = require('fs');
+var fs = require('fs').promises;
 var path = require('path');
 var helpers = require('./helpers');
 
@@ -12,7 +12,7 @@ lib.create = (dir, fileName, data) => {
   var _fileName = lib.baseDir + dir + '/' + fileName + '.json';
 
   return fs.open(_fileName, 'wx')
-    .then(file => fs.writeFile(file, JSON.stringify(data))
+    .then(file => fs.writeFile(file, JSON.stringify(data)))
     .then(fs.close)
     .then(_ => Promise.resolve(false))
     .catch(err => Promise.reject(`Error creating file ${_fileName}: ${err}`));
@@ -28,11 +28,15 @@ lib.read = (dir, fileName) => {
 
 lib.update = (dir, fileName, data) => {
   var _fileName = lib.baseDir + dir + '/' + fileName + '.json';
+  var theFile;
 
   return fs.open(_fileName, 'r+')
-    .then(fs.ftruncate)
-    .then(file => fs.writeFile(file, JSON.stringify(data)))
-    .then(fs.close)
+    .then(file => {
+      theFile = file;
+      return fs.ftruncate(file);
+    })
+    .then(_ => fs.writeFile(theFile, JSON.stringify(data)))
+//    .then(_ => fs.close(theFile))
     .then(_ => Promise.resolve(false))
     .catch(err => Promise.reject(`Error updating file ${_fileName}: ${err}`));
 };
