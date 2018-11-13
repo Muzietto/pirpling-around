@@ -52,7 +52,7 @@ var unifiedServer = protocol => (req, res) => {
 
     console.log(`>>>>> ${protocol} ${method} received on /${trimmedPath} with qs ${JSON.stringify(qs)} and headers ${JSON.stringify(headers)} and payload ${buffer}`);
 
-    var chosenHandler = router[trimmedPath] || handlers.notFound;
+    var chosenHandler = [trimmedPath] || handlers.notFound;
 
     var data = {
       trimmedPath,
@@ -62,20 +62,7 @@ var unifiedServer = protocol => (req, res) => {
       payload: helpers.parseJsonToObject(buffer),
     };
 
-    chosenHandler(data, (statusCode, payload) => {
-
-      statusCode = (typeof statusCode === 'number') ? statusCode : 200;
-      payload = (typeof payload === 'object') ? payload : {};
-
-      var payloadString = JSON.stringify(payload);
-
-      res.setHeader('Content-Type', 'application/json');
-      res.writeHead(statusCode);
-      res.end(payloadString);
-
-      console.log(`<<<<< ${protocol} ${method} on /${trimmedPath}: sending back code ${statusCode} and payload ${payloadString}\n`);
-    });
-
+    handlerInterfaces()[chosenHandler.interfaceType()](chosenHandler, data);
   });
 }
 
@@ -85,3 +72,39 @@ var router = {
   users: handlers.users,
   tokens: handlers.tokens,
 };
+
+function handlerInterfaces() {
+  return {
+    callback: (handler, data) => {
+      handler(data, (statusCode, payload) => {
+
+          statusCode = (typeof statusCode === 'number') ? statusCode : 200;
+          payload = (typeof payload === 'object') ? payload : {};
+
+          var payloadString = JSON.stringify(payload);
+
+          res.setHeader('Content-Type', 'application/json');
+          res.writeHead(statusCode);
+          res.end(payloadString);
+
+          console.log(`CALLBACK: <<<<< ${protocol} ${method} on /${trimmedPath}: sending back code ${statusCode} and payload ${payloadString}\n`);
+      });
+    },
+    promise: (handler, data) => {
+      handler(data)
+        .then(({statusCode, payload}) => {
+
+            statusCode = (typeof statusCode === 'number') ? statusCode : 200;
+            payload = (typeof payload === 'object') ? payload : {};
+
+            var payloadString = JSON.stringify(payload);
+
+            res.setHeader('Content-Type', 'application/json');
+            res.writeHead(statusCode);
+            res.end(payloadString);
+
+            console.log(`PROMISE: <<<<< ${protocol} ${method} on /${trimmedPath}: sending back code ${statusCode} and payload ${payloadString}\n`);
+        });
+    },
+  };
+}
