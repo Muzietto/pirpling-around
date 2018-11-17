@@ -7,9 +7,9 @@ var unflatSpecs = require('../api/lib/unflat.spec');
 runner.tests = {
   unit:{
     ...unflatSpecs,
-    // ...helpersSpecs,
-    // ...dataSpecs,
-    // ...data0Specs,
+    ...helpersSpecs,
+    ...dataSpecs,
+    ...data0Specs,
   },
 };
 
