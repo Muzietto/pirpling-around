@@ -1,5 +1,4 @@
 // uses promise-based datasources and returns promises
-
 var _data = require('../data');
 var _dataPromise = require('../data0');
 var helpers = require('../helpers');

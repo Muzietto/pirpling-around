@@ -37,9 +37,7 @@ lib.read = (dir, fileName, callback) => {
   var _fileName = lib.baseDir + dir + '/' + fileName + '.json';
   fs.readFile(_fileName, 'utf-8', (err, data) => {
     if (!err) {
-
       callback(false, helpers.parseJsonToObject(data));
-
     } else {
       callback({error: `Error reading user data: ${err}`})
     }
