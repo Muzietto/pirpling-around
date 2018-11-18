@@ -1,4 +1,5 @@
 var _data = require('../data');
+var _tokensHandlers = require('./tokens');
 var helpers = require('../helpers');
 
 var handlers = {
@@ -7,7 +8,6 @@ var handlers = {
 
 // required firstName, lastName, phone, password, tosAgreement
 handlers.post = (data, callback) => {
-
   var firstName = helpers.validatedS(data.payload.firstName);
   var lastName = helpers.validatedS(data.payload.lastName);
   var phone = helpers.validatedS(data.payload.phone);
@@ -15,15 +15,11 @@ handlers.post = (data, callback) => {
   var tosAgreement = helpers.validatedB(data.payload.tosAgreement);
 
   if (firstName &&  lastName && phone && password && tosAgreement) {
-
     // user must be non-existing
     _data.read('users', phone, (err, data) => {
-
       if (err) { // couldn't read .data/users/<phone>.json
-
         // hash the password
         var hashedPassword = helpers.hash(password);
-
         if (hashedPassword) {
           var userObject = {
             firstName,
@@ -34,7 +30,6 @@ handlers.post = (data, callback) => {
           };
 
           _data.create('users', phone, userObject, err => {
-
             if (!err) {
               console.log(`Created new user: ${phone}`);
               callback(200);
@@ -47,12 +42,10 @@ handlers.post = (data, callback) => {
         } else {
           callback(400, {error: 'Problems hashing the password'});
         }
-
       } else {
         callback(400, {error: 'A user with that phone number already exists'});
       }
     });
-
   } else {
     callback(400, {error: 'Missing required fields'});
   }
@@ -102,7 +95,6 @@ handlers.get = (data, callback) => {
 };
 
 handlers.put = (data, callback) => {
-
   var phone = typeof data.payload !== 'undefined'
     && typeof data.payload.phone === 'string'
     && data.payload.phone.trim().length > 0
@@ -112,19 +104,15 @@ handlers.put = (data, callback) => {
   var password = helpers.validatedS(data.payload.password);
 
   if (phone) {
-
     var token  = typeof data.headers.token === 'string' && data.headers.token;
     console.log(`user token is ${token}`);
-
     _tokensHandlers.verifyToken(token, phone, isValid => {
-
       if (isValid) {
-        console.log('token is valid');
+        console.log('users.put: token is valid');
         if (firstName || lastName || password) {
 
           _data.read('users', phone, (err, data) =>{
             if (!err && data) {
-
               if (firstName) {
                 data.firstName = firstName;
               }
@@ -134,7 +122,6 @@ handlers.put = (data, callback) => {
               if (password) {
                 data.hashedPassword = helpers.hash(password);
               }
-
               _data.update('users', phone, data, err => {
                 if (!err) {
                   callback(200);
@@ -148,16 +135,13 @@ handlers.put = (data, callback) => {
               callback(404);
             }
           });
-
         } else {
           callback(400, {error: 'no fields to update'});
         }
-
       } else {
         callback(403, {error: 'missing token in header or invalid token'});
       }
     });
-
   } else {
     callback(400, {error: 'missing required field'});
   }
@@ -171,40 +155,35 @@ handlers.delete = (data, callback) => {
     && data.payload.phone.trim().length > 0
     && data.payload.phone.trim();
 
-  console.log(`user phone is ${phone}`);
+  console.log(`users.delete: user phone is ${phone}`);
 
   if (phone) {
     var token  = typeof data.headers.token === 'string' && data.headers.token;
-    console.log(`user token is ${token}`);
-
+    console.log(`users.delete: user token is ${token}`);
     _tokensHandlers.verifyToken(token, phone, isValid => {
-
       if (isValid) {
-        console.log('token is valid');
-
+        console.log('users.delete: token is valid');
         _data.read('users', phone, (err, data) => {
           if (!err && data) {
             _data.delete('users', phone, err => {
               if (!err) {
                 callback(200);
               } else {
-                var msg = `could not delete user ${phone}: ${err}`;
+                var msg = `users.delete: could not delete user ${phone}: ${err}`;
                 console.log(msg);
                 callback(500, {error: msg});
               }
             });
           } else {
-            callback(400, {error: `could not find user ${phone}`});
+            callback(400, {error: `users.delete: could not find user ${phone}`});
           }
         });
-
       } else {
-        callback(403, {error: 'missing token in header or invalid token'});
+        callback(403, {error: 'users.delete: missing token in header or invalid token'});
       }
     });
-
   } else {
-    callback(400, {error: 'missing required field: phone number'});
+    callback(400, {error: 'users.delete: missing required field phone number'});
   }
 };
 
